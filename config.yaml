@@ -1,0 +1,35 @@
+version: "0525"
+
+app:
+  window_title: "Lenovo Qira"
+  process_name: "QuantumAI.Hub"
+  launch_path: ""
+
+ui:
+  template_confidence: 0.75
+  chat_window_width: 480
+  chat_window_max_height: 500
+
+execution:
+  response_timeout: 90
+  retry_count: 1
+  poll_interval: 1
+
+judge:
+  llm_enabled: true
+  ollama_base_url: "http://localhost:11434/v1"
+  ollama_model: "qwen3-vl:2b"
+  ollama_max_tokens: 256
+  ollama_temperature: 0
+  error_keywords:
+    - "抱歉，我无法回答"
+    - "网络错误"
+    - "服务不可用"
+    - "请求超时"
+    - "系统繁忙"
+
+excel:
+  question_column: "问题"
+  expected_column: "期望答案"
+  category_column: "分类"
+  reset_session_column: "新建会话"
