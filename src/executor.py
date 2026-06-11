@@ -86,8 +86,8 @@ class Executor:
                 "Could not find or launch the chat client."
             )
 
-        # Start fresh: reset if there's existing content
-        if self.automator.has_reset():
+        # Start fresh only when the next pending question starts a new session.
+        if pending[0].reset_session and self.automator.has_reset():
             print("Resetting to start fresh...")
             self.automator.reset_chat()
 
@@ -109,11 +109,11 @@ class Executor:
             results.completed += 1
             self._save_results(results)
 
-            # Recover from timeout: click reset to restore chat state
-            if entry.error == "TIMEOUT":
-                print(f"\n  Q{q.index} timed out, resetting chat...")
+            # Recover UI after an exhausted timeout without destroying non-new context.
+            if entry.error in ("TIMEOUT", "SEND_CLICK_FAILED"):
+                print(f"\n  Q{q.index} {entry.error}, recovering chat...")
                 try:
-                    self.automator.reset_chat()
+                    self.automator.recover_after_failure(q.reset_session)
                 except Exception:
                     pass
 
@@ -154,7 +154,17 @@ class Executor:
                 )
                 if resp.error:
                     last_error = resp.error
-                    if resp.error == "TIMEOUT":
+                    if resp.error in ("TIMEOUT", "SEND_BUTTON_NOT_FOUND", "SEND_CLICK_FAILED"):
+                        logger.warning(
+                            f"Q{question.index}: {resp.error}, "
+                            f"attempt {attempt + 1}/{max_retries}"
+                        )
+                        if attempt < max_retries - 1:
+                            try:
+                                self.automator.recover_after_failure(question.reset_session)
+                            except Exception:
+                                logger.exception("Recovery after failure failed")
+                            continue
                         return ResultEntry(
                             question=question.question,
                             expected=question.expected,
@@ -162,7 +172,7 @@ class Executor:
                             response="",
                             screenshot_path=resp.screenshot_path,
                             elapsed_seconds=resp.elapsed_seconds,
-                            error="TIMEOUT",
+                            error=resp.error,
                             retries=attempt,
                         )
                     if resp.error == "EMPTY_RESPONSE":
@@ -197,8 +207,10 @@ class Executor:
                 last_error = str(e)
                 logger.error(f"Q{question.index} attempt {attempt + 1} failed: {e}")
                 if attempt < max_retries - 1:
-                    self.automator.restart_app()
-                    self.automator.ensure_app_ready()
+                    try:
+                        self.automator.recover_after_failure(question.reset_session)
+                    except Exception:
+                        logger.exception("Recovery after exception failed")
 
         return ResultEntry(
             question=question.question,

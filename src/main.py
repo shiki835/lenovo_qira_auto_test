@@ -73,7 +73,7 @@ def _cmd_run(args, config: Config):
 
 
 def _cmd_judge(args, config: Config):
-    from .judge import judge_version, save_judge_results
+    from .judge import judge_version
 
     results = judge_version(args.version, config)
     p = sum(1 for r in results if r.verdict == "PASS")
@@ -90,11 +90,9 @@ def _cmd_judge(args, config: Config):
         if r.verdict in ("FAIL", "UNCERTAIN"):
             print(f"\n  [{r.verdict}] Q{r.index}: {r.question[:60]}...")
             print(f"    Expected: {r.expected[:80]}...")
-            print(f"    Screenshot: {r.screenshot_path}")
+            print(f"    Got:      {r.response[:80]}...")
             if r.l2_reason:
                 print(f"    Reason:   {r.l2_reason}")
-
-    save_judge_results(results, args.version)
 
 
 def _cmd_report(args, config: Config):

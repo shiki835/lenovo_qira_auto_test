@@ -155,7 +155,7 @@ def _build_rows(results: list[JudgeResult]) -> str:
     rows = []
     for r in results:
         cls = {"PASS": "pass", "FAIL": "fail", "UNCERTAIN": "uncertain"}.get(r.verdict, "")
-        screenshot = _esc(r.screenshot_path) if r.screenshot_path else ""
+        response_escaped = _esc(r.response[:200])
         expected_escaped = _esc(r.expected[:200])
         reason_escaped = _esc(r.l2_reason) if r.l2_reason else _esc(r.error)
         rows.append(
@@ -163,7 +163,7 @@ def _build_rows(results: list[JudgeResult]) -> str:
             f"<td>{r.index}</td>"
             f'<td class="q">{_esc(r.question[:80])}</td>'
             f'<td class="expected">{expected_escaped}</td>'
-            f'<td class="response">{screenshot}</td>'
+            f'<td class="response">{response_escaped}</td>'
             f'<td class="verdict">{r.verdict}</td>'
             f'<td class="reason">{reason_escaped}</td>'
             f"</tr>"
@@ -237,7 +237,7 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
 </div>
 <table>
 <thead><tr>
-  <th>#</th><th>Question</th><th>Expected</th><th>Screenshot</th><th>Verdict</th><th>Reason</th>
+  <th>#</th><th>Question</th><th>Expected</th><th>Response</th><th>Verdict</th><th>Reason</th>
 </tr></thead>
 <tbody>{rows}</tbody>
 </table>

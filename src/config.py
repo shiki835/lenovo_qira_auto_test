@@ -28,10 +28,7 @@ class ExecutionConfig:
 @dataclass
 class JudgeConfig:
     llm_enabled: bool = True
-    ollama_base_url: str = "http://localhost:11434/v1"
-    ollama_model: str = "qwen3-vl:8b"
-    ollama_max_tokens: int = 256
-    ollama_temperature: float = 0
+    llm_model: str = "claude-sonnet-4-6"
     error_keywords: list[str] = field(default_factory=lambda: [
         "抱歉，我无法回答", "网络错误", "服务不可用",
         "请求超时", "系统繁忙",
